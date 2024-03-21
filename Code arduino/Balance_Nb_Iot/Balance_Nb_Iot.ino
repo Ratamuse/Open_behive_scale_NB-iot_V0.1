@@ -57,7 +57,7 @@ const char gprsPass[] = "";
 
 // cayenne server address and port
 const char server[] = "ratamuse.hopto.org";
-const int port = 1883;
+const int port = 1885;
 char buffer[1024] = { 0 };
 
 // To create a device : https://cayenne.mydevices.com/cayenne/dashboard
@@ -88,8 +88,8 @@ HX711 scale1;
 HX711 scale2;
 uint8_t dataPin1 = 35;
 uint8_t clockPin1 = 36;
-uint8_t dataPin2 = 33;
-uint8_t clockPin2 = 34;
+uint8_t dataPin2 = 13;
+uint8_t clockPin2 = 14;
 
 
 bool isConnect() {
@@ -128,6 +128,9 @@ void setup() {
   //Set the working voltage of the modem, please do not modify the parameters
   PMU.setDC3Voltage(3000);  //SIM7080 Modem main power channel 2700~ 3400V
   PMU.enableDC3();
+
+  PMU.setDC5Voltage(3300);  //SIM7080 Modem main power channel 2700~ 3400V
+  PMU.enableDC5();
 /*
   //Modem GPS Power channel
   PMU.setBLDO2Voltage(3300);
@@ -306,6 +309,7 @@ void setup() {
       //delay(1000);
       //PMU.disableBLDO2();
       PMU.disableDC3();
+      PMU.disableDC5();
       ESP.restart();
     }
 
@@ -318,10 +322,10 @@ void setup() {
 /*
   scale1.begin(dataPin1, clockPin1);
   scale1.set_scale(1009.484497);
-
+*/
   scale2.begin(dataPin2, clockPin2);
-  scale2.set_scale(1009.484497);
-  */
+  scale2.set_scale(1.601872);
+  
 }
 
 void loop() {
@@ -341,39 +345,40 @@ void loop() {
   }
 
   delay(200);
-
+*/
   if (scale2.is_ready())
     delay(200);
   {
-    scaleB = (scale2.get_units(1) + 15.7);
+    scaleB = (scale2.get_units(1) + 0);
     Serial.println(scaleB);
   }
 
   delay(200);
+/*
 
-*/
   Serial.println();
   // Publish fake temperature data
   String payload1 = "";
   int temp1 = rand() % (randMax - randMin) + randMin;
   payload1.concat(temp1);
   payload1.concat("\r\n");
-  /*
+  
   String payload2 = "";
   payload2.concat(scaleA);
   payload2.concat("\r\n");
+*/
 
 String payload3 = "";
   payload3.concat(scaleB);
   payload3.concat("\r\n");
 
-*/
+
   bat = PMU.getBatteryPercent();
-  String payload3 = "";
-  payload3.concat(bat);
-  payload3.concat("\r\n");
+  String payload4 = "";
+  payload4.concat(bat);
+  payload4.concat("\r\n");
 
-
+/*
   // AT+SMPUB=<topic>,<content length>,<qos>,<retain><CR>message is enteredQuit edit mode if messagelength equals to <contentlength>
   snprintf(buffer, 1024, "+SMPUB=\"v1/%s/Temp/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
   modem.sendAT(buffer);
@@ -389,7 +394,7 @@ String payload3 = "";
     }
   }
   delay(100);
-  /*
+  
   snprintf(buffer, 1024, "+SMPUB=\"v1/%s/scale1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
@@ -406,7 +411,7 @@ String payload3 = "";
 delay(100);
 */
 
-  /*
+  
   snprintf(buffer, 1024, "+SMPUB=\"v1/%s/scale2/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
@@ -421,20 +426,20 @@ delay(100);
     }
   }
 delay(100);
-*/
 
 
-  snprintf(buffer, 1024, "+SMPUB=\"v1/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
+
+  snprintf(buffer, 1024, "+SMPUB=\"v1/%s/bat1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
-    modem.stream.write(payload3.c_str(), payload3.length());
-    Serial.print("Try publish payload3: ");
-    Serial.println(payload3);
+    modem.stream.write(payload4.c_str(), payload4.length());
+    Serial.print("Try publish payload4: ");
+    Serial.println(payload4);
 
     if (modem.waitResponse(3000)) {
-      Serial.println("Send Packet3 success!");
+      Serial.println("Send Packet4 success!");
     } else {
-      Serial.println("Send Packet3 failed!");
+      Serial.println("Send Packet4 failed!");
     }
   }
   modem.sendAT("+SMDISC");
@@ -447,5 +452,6 @@ delay(100);
   delay(100);
   //PMU.disableBLDO2();
   PMU.disableDC3();
+   PMU.disableDC5();
   esp_deep_sleep_start();
 }
