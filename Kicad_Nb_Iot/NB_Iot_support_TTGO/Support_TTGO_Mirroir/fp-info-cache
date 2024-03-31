@@ -1,4 +1,4 @@
-21762123708662996
+21761254023347417
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -53493,13 +53493,6 @@ Inductor
 0
 2
 2
-Empreintes
-JST_PH_S4B-PH-K_1x04_P2.00mm_Horizontal_ratamuse
-JST PH series connector, S4B-PH-K (http://www.jst-mfg.com/product/pdf/eng/ePH.pdf), generated with kicad-footprint-generator
-connector JST PH top entry
-0
-4
-4
 Empreintes
 L80-M39
 L80-M39

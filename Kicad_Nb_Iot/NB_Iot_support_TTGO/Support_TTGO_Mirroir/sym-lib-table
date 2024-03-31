@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "PMBT2222A_215")(type "Legacy")(uri "${KIPRJMOD}/librairie/PMBT2222A_215.lib")(options "")(descr ""))
+)
