@@ -70,14 +70,15 @@ int data_channel = 0;
 
 HX711 scale1;
 HX711 scale2;
-uint8_t dataPin1 = 9;
-uint8_t clockPin1 = 10;
-uint8_t dataPin2 = 12;
-uint8_t clockPin2 = 14;
+uint8_t dataPin1 = 47;
+uint8_t clockPin1 = 21;
+uint8_t dataPin2 = 14;
+uint8_t clockPin2 = 13;
 //float factor1;
 //float factor2;
 
-const int gpioPin = 21;
+int ledPin = 46;
+const int gpioPin = 11;
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
 #include "Preferences.h"
@@ -247,6 +248,23 @@ void setup1(){
   while (!Serial);
         // Si la broche est basse (LOW), exécutez la fonction "calibration"
         initPMU();
+pinMode(ledPin, OUTPUT);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
         scale1.begin(dataPin1, clockPin1);
         scale2.begin(dataPin2, clockPin2);
 
@@ -304,8 +322,24 @@ else{
   PMU.enableDC3();
   PMU.setDC5Voltage(3300);  //SIM7080 Modem main power channel 2700~ 3400V
   PMU.enableDC5();
-
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_14,1);
+pinMode(ledPin, OUTPUT);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_11,1);
 /*
   //Modem GPS Power channel
   PMU.setBLDO2Voltage(3300);
