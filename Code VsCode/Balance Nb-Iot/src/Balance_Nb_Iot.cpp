@@ -103,6 +103,14 @@ int connectionFailures = 0;
 bool setup1Executed = false;
 
 
+#include "DS18B20.h"
+
+
+//#define ONE_WIRE_BUS              37
+
+OneWire oneWire(37);
+DS18B20 sensor(&oneWire);
+
 
 
 void sendCommonHTML(AsyncWebServerRequest *request, String content) {
@@ -562,6 +570,8 @@ float offset2 = preferences.getFloat("offset2", 0.0); // 0.0 est la valeur par d
   scale2.set_scale(factor2);
   
 }
+sensor.begin();
+
 }
 
 void loop() {
@@ -579,6 +589,16 @@ if (setup1Executed) {
   Serial.print("getBatteryPercent:");
   Serial.print(PMU.getBatteryPercent());
   Serial.println("%");
+  sensor.requestTemperatures();
+
+  //  wait until sensor is ready
+  while (!sensor.isConversionComplete())
+  {
+    delay(1);
+  }
+
+  Serial.print("Temp: ");
+  Serial.println(sensor.getTempC());
 
 // Initialiser les préférences
   preferences.begin("my-app", false);
