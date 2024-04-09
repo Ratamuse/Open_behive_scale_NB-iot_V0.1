@@ -71,14 +71,14 @@ int data_channel = 0;
 HX711 scale1;
 HX711 scale2;
 uint8_t dataPin1 = 47;
-uint8_t clockPin1 = 21;
+uint8_t clockPin1 = 48;
 uint8_t dataPin2 = 14;
 uint8_t clockPin2 = 13;
 //float factor1;
 //float factor2;
 
 int ledPin = 46;
-const int gpioPin = 11;
+const int gpioPin = 12;
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
 #include "Preferences.h"
@@ -106,9 +106,9 @@ bool setup1Executed = false;
 #include "DS18B20.h"
 
 
-//#define ONE_WIRE_BUS              37
+#define ONE_WIRE_BUS              11
 
-OneWire oneWire(37);
+OneWire oneWire(ONE_WIRE_BUS);
 DS18B20 sensor(&oneWire);
 
 
