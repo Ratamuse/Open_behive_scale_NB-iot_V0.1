@@ -23,7 +23,7 @@ XPowersPMU PMU;
 #define TINY_GSM_MODEM_SIM7080
 #include <TinyGsmClient.h>
 #include "utilities.h"
-#define MAX_CONNECT_ATTEMPTS 3
+#define MAX_CONNECT_ATTEMPTS 10
 
 #ifdef DUMP_AT_COMMANDS
 #include <StreamDebugger.h>
@@ -70,15 +70,15 @@ int data_channel = 0;
 
 HX711 scale1;
 HX711 scale2;
-uint8_t dataPin1 = 47;
-uint8_t clockPin1 = 48;
+uint8_t dataPin1 = 12;
+uint8_t clockPin1 = 11;
 uint8_t dataPin2 = 14;
 uint8_t clockPin2 = 13;
 //float factor1;
 //float factor2;
 
 int ledPin = 46;
-const int gpioPin = 12;
+const int gpioPin = 9;
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
 #include "Preferences.h"
@@ -106,7 +106,7 @@ bool setup1Executed = false;
 #include "DS18B20.h"
 
 
-#define ONE_WIRE_BUS              11
+#define ONE_WIRE_BUS              21
 
 OneWire oneWire(ONE_WIRE_BUS);
 DS18B20 sensor(&oneWire);
@@ -135,6 +135,10 @@ void handleRoot(AsyncWebServerRequest *request) {
   content += "</form>";
   content += "<form action=\"/calibrate2\" method=\"get\">";
   content += "<input type=\"submit\" value=\"Calibration balance 2\">";
+  content += "</form>";
+    // Ajout du bouton "Redémarrer l'ESP32"
+  content += "<form action=\"/reboot\" method=\"post\">";
+  content += "<button type=\"submit\">Redémarrer l'ESP32</button>";
   content += "</form>";
   content += "</div>";
   sendCommonHTML(request, content);
@@ -172,9 +176,9 @@ void handleWeight1(AsyncWebServerRequest *request) {
   if (request->hasArg("weight")) {
     uint32_t weight = request->arg("weight").toInt();
     scale1.calibrate_scale(weight, 20);
-    float scale = scale1.get_scale();
+    float scalea = scale1.get_scale();
     uint32_t offset1 = scale1.get_offset();
-    message = "<p>Calibration terminée. Factor 1: " + String(scale, 6) + ", Offset 1: " + String(offset1) + "</p>";
+    message = "<p>Calibration terminée. Factor 1: " + String(scalea, 6) + ", Offset 1: " + String(offset1) + "</p>";
 
     // Button to trigger ESP32 reboot
     message += "<form action=\"/reboot\" method=\"post\">";
@@ -185,7 +189,7 @@ void handleWeight1(AsyncWebServerRequest *request) {
 
     // Save scale value to ESP32's EEPROM
     preferences.begin("my-app", false);
-    preferences.putFloat("factor1", scale);
+    preferences.putFloat("factor1", scalea);
     preferences.putFloat("offset1",offset1);
     preferences.end();
   } else {
@@ -203,9 +207,9 @@ void handleWeight2(AsyncWebServerRequest *request) {
   if (request->hasArg("weight")) {
     uint32_t weight = request->arg("weight").toInt();
     scale2.calibrate_scale(weight, 20);
-    float scale = scale2.get_scale();
+    float scaleb = scale2.get_scale();
     uint32_t offset2 = scale2.get_offset();
-    message = "<p>Calibration terminée. Factor 2: " + String(scale, 6) + ", Offset 2: " + String(offset2) + "</p>";
+    message = "<p>Calibration terminée. Factor 2: " + String(scaleb, 6) + ", Offset 2: " + String(offset2) + "</p>";
     
     // Button to trigger ESP32 reboot
     message += "<form action=\"/reboot\" method=\"post\">";
@@ -216,7 +220,7 @@ void handleWeight2(AsyncWebServerRequest *request) {
     
     // Save scale value to ESP32's EEPROM
     preferences.begin("my-app", false);
-    preferences.putFloat("factor2", scale);
+    preferences.putFloat("factor2", scaleb);
     preferences.putFloat("offset2", offset2);
     preferences.end();
   } else {
@@ -412,15 +416,21 @@ digitalWrite(ledPin, LOW);
   Serial.printf("getNetworkMode:%u getPreferredMode:%u\n", mode, pre);
 
 
-  /*********************************
+ /*********************************
     * step 5 : Wait for the network registration to succeed
     ***********************************/
   RegStatus s;
+  int attempts = 0; // Ajoutez un compteur pour les tentatives de connexion
   do {
     s = modem.getRegistrationStatus();
     if (s != REG_OK_HOME && s != REG_OK_ROAMING) {
       Serial.print(".");
       delay(1000);
+      attempts++; // Incrémentez le compteur à chaque tentative
+      if (attempts >= 10) { // Si 10 tentatives ont échoué
+        esp_sleep_enable_timer_wakeup(30 * 60 * 1000000LL); // Mettez l'ESP32-S3 en deep sleep pendant 30 minutes
+        esp_deep_sleep_start();
+      }
     }
 
   } while (s != REG_OK_HOME && s != REG_OK_ROAMING);
@@ -515,15 +525,16 @@ digitalWrite(ledPin, LOW);
       connectAttempts++;
     }
 
-    // Si le nombre maximum de tentatives de connexion est atteint, redémarrer l'ESP32
+    // Si le nombre maximum de tentatives de connexion est atteint, Entrer en mode de veille profonde pendant 30 minutes
     if (connectAttempts >= MAX_CONNECT_ATTEMPTS) {
       Serial.println("La connexion a échoué après plusieurs tentatives, redémarrage de l'ESP32...");
       modem.sendAT("+CPOWD=<1>");
       Serial.println("Modem stoppé");
       //delay(1000);
-      //PMU.disableBLDO2();
-      PMU.disableDC3();
-      esp_restart();
+       PMU.disableDC3();
+       PMU.disableDC5();
+  
+  esp_deep_sleep_start();
     }
 
   } while (ret != 1);
@@ -623,7 +634,7 @@ int scaleA = 0;
     delay(200);
   {
     scaleA = static_cast<int>(((scale1.read_average(10)-offset1)/factor1));
-    Serial.println(scaleA);
+    
    Serial.print("ScaleA:");
     Serial.println(scaleA);
   }
@@ -645,14 +656,13 @@ int scaleB = 0;
 
   delay(200);
 
-/*
+int temp1 = 0;
   Serial.println();
-  // Publish fake temperature data
+  temp1 = sensor.getTempC();
   String payload1 = "";
-  int temp1 = rand() % (3-2) + randMin;
   payload1.concat(temp1);
   payload1.concat("\r\n");
-  */
+  
   
   String payload2 = "";
   payload2.concat(scaleA);
@@ -670,8 +680,8 @@ String payload3 = "";
 
 
   // AT+SMPUB=<topic>,<content length>,<qos>,<retain><CR>message is enteredQuit edit mode if messagelength equals to <contentlength>
-  /*
-  snprintf(buffer, 1024, "+SMPUB=\"v1/%s/Temp/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
+  
+  snprintf(buffer, 1024, "+SMPUB=\"G1/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload1.c_str(), payload1.length());
@@ -685,9 +695,9 @@ String payload3 = "";
     }
   }
   delay(100);
-  */
   
-  snprintf(buffer, 1024, "+SMPUB=\"v2/%s/scale1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
+  
+  snprintf(buffer, 1024, "+SMPUB=\"G1/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload2.c_str(), payload2.length());
@@ -704,7 +714,7 @@ delay(100);
 
 
   
-  snprintf(buffer, 1024, "+SMPUB=\"v2/%s/scale2/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G1/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload3.c_str(), payload3.length());
@@ -721,7 +731,7 @@ delay(100);
 
 
 
-  snprintf(buffer, 1024, "+SMPUB=\"v2/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G1/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload4.c_str(), payload4.length());
@@ -738,10 +748,18 @@ delay(100);
 
   // Entrer en mode de veille profonde pendant 30 secondes
   Serial.println("Entering deep sleep for 30 minutes...");
-  esp_sleep_enable_timer_wakeup(1800 * 1000000);  // 30 secondes en microsecondes
+  esp_sleep_enable_timer_wakeup(1800 * 1000000);  // 30 secondes en microsecondes 1800s
   modem.sendAT("+CPOWD=<1>");
   Serial.println("Modem stoppé");
   delay(100);
+  digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
   //PMU.disableBLDO2();
   PMU.disableDC3();
   PMU.disableDC5();
