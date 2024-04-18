@@ -479,8 +479,20 @@ digitalWrite(ledPin, LOW);
   Serial.println(csq);
 
 
+char buffer[1024] = {0};
 
+// Envoyer la commande AT pour obtenir l'heure
+modem.sendAT("+CCLK?");
+if (modem.waitResponse(1000L, "+CCLK: ") != 1) {
+    // Gestion de l'erreur
+    Serial.println("Erreur lors de la récupération de l'heure");
 
+    } else {
+        // Supprimer le préfixe "+CCLK: " et le suffixe de fin de ligne de la réponse
+        char *timeStr = buffer + 7;
+        timeStr[strlen(timeStr) - 2] = '\0';
+        Serial.println(timeStr);
+    }
   /*********************************
     * step 6 : setup MQTT Client
     ***********************************/
