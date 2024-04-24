@@ -65,7 +65,7 @@
 #define I2C_SCL                     (6)
 
 #define PIR_INPUT_PIN               (39)
-#define PMU_INPUT_PIN               (2)
+//#define PMU_INPUT_PIN               (2)
 
 
 #define IIS_WS_PIN                  (42)

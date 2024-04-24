@@ -70,15 +70,15 @@ int data_channel = 0;
 
 HX711 scale1;
 HX711 scale2;
-uint8_t dataPin1 = 47;
-uint8_t clockPin1 = 48;
+uint8_t dataPin1 = 48;
+uint8_t clockPin1 = 47;
 uint8_t dataPin2 = 14;
 uint8_t clockPin2 = 13;
 //float factor1;
 //float factor2;
 
-int ledPin = 46;
-const int gpioPin = 12;
+int ledPin = 1;
+const int gpioPin = 2;
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
 #include "Preferences.h"
@@ -296,7 +296,7 @@ digitalWrite(ledPin, LOW);
 void setup() {
 
   pinMode(gpioPin, INPUT_PULLUP);
-
+delay(100);
     // Lecture de l'état de la broche GPIO 12
     
 
@@ -638,7 +638,7 @@ int scaleA = 0;
     delay(200);
   {
     scaleA = static_cast<int>(((scale1.read_average(10)-offset1)/factor1));
-    Serial.println(scaleA);
+    
    Serial.print("ScaleA:");
     Serial.println(scaleA);
   }
@@ -660,14 +660,13 @@ int scaleB = 0;
 
   delay(200);
 
-/*
+int temp1 = 0;
   Serial.println();
-  // Publish fake temperature data
+  temp1 = sensor.getTempC();
   String payload1 = "";
-  int temp1 = rand() % (3-2) + randMin;
   payload1.concat(temp1);
   payload1.concat("\r\n");
-  */
+  
   
   String payload2 = "";
   payload2.concat(scaleA);
@@ -685,8 +684,8 @@ String payload3 = "";
 
 
   // AT+SMPUB=<topic>,<content length>,<qos>,<retain><CR>message is enteredQuit edit mode if messagelength equals to <contentlength>
-  /*
-  snprintf(buffer, 1024, "+SMPUB=\"v1/%s/Temp/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
+  
+  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload1.c_str(), payload1.length());
@@ -700,9 +699,9 @@ String payload3 = "";
     }
   }
   delay(100);
-  */
   
-  snprintf(buffer, 1024, "+SMPUB=\"v2/%s/scale1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
+  
+  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload2.c_str(), payload2.length());
@@ -719,7 +718,7 @@ delay(100);
 
 
   
-  snprintf(buffer, 1024, "+SMPUB=\"v2/%s/scale2/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload3.c_str(), payload3.length());
@@ -736,7 +735,7 @@ delay(100);
 
 
 
-  snprintf(buffer, 1024, "+SMPUB=\"v2/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload4.c_str(), payload4.length());
@@ -753,10 +752,18 @@ delay(100);
 
   // Entrer en mode de veille profonde pendant 30 secondes
   Serial.println("Entering deep sleep for 30 minutes...");
-  esp_sleep_enable_timer_wakeup(1800 * 1000000);  // 30 secondes en microsecondes
+  esp_sleep_enable_timer_wakeup(1800 * 1000000);  // 30 secondes en microsecondes 1800s
   modem.sendAT("+CPOWD=<1>");
   Serial.println("Modem stoppé");
   delay(100);
+  digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
+digitalWrite(ledPin, HIGH);
+delay(50);
+digitalWrite(ledPin, LOW);
+delay(50);
   //PMU.disableBLDO2();
   PMU.disableDC3();
   PMU.disableDC5();

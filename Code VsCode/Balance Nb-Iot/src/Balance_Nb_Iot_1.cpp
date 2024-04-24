@@ -12,7 +12,11 @@
 //#include "utilities.h"
 
 XPowersPMU PMU;
-
+#define BOARD_MODEM_PWR_PIN         41
+#define BOARD_MODEM_DTR_PIN         42
+#define BOARD_MODEM_RI_PIN          3
+#define BOARD_MODEM_RXD_PIN         4
+#define BOARD_MODEM_TXD_PIN         5
 
 
 // See all AT commands, if wanted
@@ -22,7 +26,7 @@ XPowersPMU PMU;
 
 #define TINY_GSM_MODEM_SIM7080
 #include <TinyGsmClient.h>
-#include "utilities.h"
+//#include "utilities.h"
 #define MAX_CONNECT_ATTEMPTS 10
 
 #ifdef DUMP_AT_COMMANDS
@@ -70,15 +74,15 @@ int data_channel = 0;
 
 HX711 scale1;
 HX711 scale2;
-uint8_t dataPin1 = 12;
-uint8_t clockPin1 = 11;
+uint8_t dataPin1 = 48;
+uint8_t clockPin1 = 47;
 uint8_t dataPin2 = 14;
 uint8_t clockPin2 = 13;
 //float factor1;
 //float factor2;
 
-int ledPin = 46;
-const int gpioPin = 9;
+int ledPin = 1;
+
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
 #include "Preferences.h"
@@ -241,7 +245,7 @@ void handleReboot(AsyncWebServerRequest *request) {
 
 void initPMU() {
 
-    if (!PMU.begin(Wire, AXP2101_SLAVE_ADDRESS, I2C_SDA, I2C_SCL)) {
+    if (!PMU.begin(Wire, AXP2101_SLAVE_ADDRESS, 15, 7)) {
     Serial.println("Failed to initialize power.....");
     while (1) {
       delay(4000);
@@ -296,12 +300,15 @@ digitalWrite(ledPin, LOW);
   
         
     }
+int gpioPin = 11;
+
+
 
 void setup() {
 
   pinMode(gpioPin, INPUT_PULLUP);
 
-    // Lecture de l'état de la broche GPIO 12
+    // Lecture de l'état de la broche GPIO 2
     
 
     if (digitalRead(gpioPin) == LOW) {
@@ -323,7 +330,7 @@ else{
      *  step 1 : Initialize power chip,
      *  turn on modem and gps antenna power channel
     ***********************************/
-  if (!PMU.begin(Wire, AXP2101_SLAVE_ADDRESS, I2C_SDA, I2C_SCL)) {
+  if (!PMU.begin(Wire, AXP2101_SLAVE_ADDRESS, 15, 7)) {
     Serial.println("Failed to initialize power.....");
     while (1) {
       delay(4000);
@@ -479,22 +486,20 @@ digitalWrite(ledPin, LOW);
   Serial.println(csq);
 
 
-char buffer[1024] = {0};
-
+/*********************************
+    * step 6 : Time request
+    ***********************************/
+   
 // Envoyer la commande AT pour obtenir l'heure
 modem.sendAT("+CCLK?");
 if (modem.waitResponse(1000L, "+CCLK: ") != 1) {
     // Gestion de l'erreur
     Serial.println("Erreur lors de la récupération de l'heure");
-
-    } else {
-        // Supprimer le préfixe "+CCLK: " et le suffixe de fin de ligne de la réponse
-        char *timeStr = buffer + 7;
-        timeStr[strlen(timeStr) - 2] = '\0';
-        Serial.println(timeStr);
-    }
+}
+    
+    
   /*********************************
-    * step 6 : setup MQTT Client
+    * step 7 : setup MQTT Client
     ***********************************/
 
   // If it is already connected, disconnect it first
@@ -555,7 +560,7 @@ if (modem.waitResponse(1000L, "+CCLK: ") != 1) {
 
   
 /*********************************
-    * step 6 : setup scales
+    * step 8 : setup scales
     ***********************************/
 
 
@@ -594,6 +599,8 @@ float offset2 = preferences.getFloat("offset2", 0.0); // 0.0 est la valeur par d
   
 }
 sensor.begin();
+
+ 
 
 }
 
@@ -693,7 +700,7 @@ String payload3 = "";
 
   // AT+SMPUB=<topic>,<content length>,<qos>,<retain><CR>message is enteredQuit edit mode if messagelength equals to <contentlength>
   
-  snprintf(buffer, 1024, "+SMPUB=\"G1/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload1.c_str(), payload1.length());
@@ -709,7 +716,7 @@ String payload3 = "";
   delay(100);
   
   
-  snprintf(buffer, 1024, "+SMPUB=\"G1/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload2.c_str(), payload2.length());
@@ -726,7 +733,7 @@ delay(100);
 
 
   
-  snprintf(buffer, 1024, "+SMPUB=\"G1/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload3.c_str(), payload3.length());
@@ -743,7 +750,7 @@ delay(100);
 
 
 
-  snprintf(buffer, 1024, "+SMPUB=\"G1/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload4.c_str(), payload4.length());
