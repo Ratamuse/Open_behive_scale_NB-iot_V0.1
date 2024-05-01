@@ -87,7 +87,7 @@ int ledPin = 1;
 #include "ESPAsyncWebServer.h"
 #include "Preferences.h"
 
-const char* ssid = "balance";
+const char* ssid = "balanceG4";
 const char* password1 = "123456789";
 
 AsyncWebServer server(80);
@@ -358,7 +358,7 @@ delay(50);
 digitalWrite(ledPin, HIGH);
 delay(50);
 digitalWrite(ledPin, LOW);
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_11,1);
+  //esp_sleep_enable_ext0_wakeup(GPIO_NUM_11,1);
 /*
   //Modem GPS Power channel
   PMU.setBLDO2Voltage(3300);
@@ -435,7 +435,7 @@ digitalWrite(ledPin, LOW);
       delay(1000);
       attempts++; // Incrémentez le compteur à chaque tentative
       if (attempts >= 10) { // Si 10 tentatives ont échoué
-        esp_sleep_enable_timer_wakeup(30 * 60 * 1000000LL); // Mettez l'ESP32-S3 en deep sleep pendant 30 minutes
+        esp_sleep_enable_timer_wakeup(1800 * 1000000); // Mettez l'ESP32-S3 en deep sleep pendant 30 minutes
         esp_deep_sleep_start();
       }
     }
@@ -484,22 +484,10 @@ digitalWrite(ledPin, LOW);
   int csq = modem.getSignalQuality();
   Serial.print("Signal quality:");
   Serial.println(csq);
-
-
-/*********************************
-    * step 6 : Time request
-    ***********************************/
    
-// Envoyer la commande AT pour obtenir l'heure
-modem.sendAT("+CCLK?");
-if (modem.waitResponse(1000L, "+CCLK: ") != 1) {
-    // Gestion de l'erreur
-    Serial.println("Erreur lors de la récupération de l'heure");
-}
-    
     
   /*********************************
-    * step 7 : setup MQTT Client
+    * step 6 : setup MQTT Client
     ***********************************/
 
   // If it is already connected, disconnect it first
@@ -550,7 +538,7 @@ if (modem.waitResponse(1000L, "+CCLK: ") != 1) {
       //delay(1000);
        PMU.disableDC3();
        PMU.disableDC5();
-  
+  esp_sleep_enable_timer_wakeup(1800 * 1000000); // Mettez l'ESP32-S3 en deep sleep pendant 30 minutes
   esp_deep_sleep_start();
     }
 
@@ -560,7 +548,7 @@ if (modem.waitResponse(1000L, "+CCLK: ") != 1) {
 
   
 /*********************************
-    * step 8 : setup scales
+    * step 7 : setup scales
     ***********************************/
 
 
@@ -700,7 +688,7 @@ String payload3 = "";
 
   // AT+SMPUB=<topic>,<content length>,<qos>,<retain><CR>message is enteredQuit edit mode if messagelength equals to <contentlength>
   
-  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G4/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload1.c_str(), payload1.length());
@@ -716,7 +704,7 @@ String payload3 = "";
   delay(100);
   
   
-  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G4/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload2.c_str(), payload2.length());
@@ -733,7 +721,7 @@ delay(100);
 
 
   
-  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G4/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload3.c_str(), payload3.length());
@@ -750,7 +738,7 @@ delay(100);
 
 
 
-  snprintf(buffer, 1024, "+SMPUB=\"G2/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G4/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload4.c_str(), payload4.length());
