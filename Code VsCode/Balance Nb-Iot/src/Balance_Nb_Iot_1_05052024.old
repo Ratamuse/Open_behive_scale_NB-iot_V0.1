@@ -87,7 +87,7 @@ int ledPin = 1;
 #include "ESPAsyncWebServer.h"
 #include "Preferences.h"
 
-const char* ssid = "balanceG3";
+const char* ssid = "balanceG5";
 const char* password1 = "123456789";
 
 AsyncWebServer server(80);
@@ -302,28 +302,6 @@ digitalWrite(ledPin, LOW);
     }
 int gpioPin = 11;
 
-#define MONITOR_INTERVAL_SECONDS 300
-
-// Définir une variable globale pour stocker le dernier temps où le premier cœur a été vu en cours d'exécution
-unsigned long lastSeenRunning = 0;
-
-// Déclaration de la fonction pour la tâche de surveillance du premier cœur
-void monitorFirstCoreTask(void * parameter);
-// Fonction pour la tâche de surveillance du premier cœur
-void monitorFirstCoreTask(void * parameter) {
-  // Boucle infinie pour la surveillance
-  while (true) {
-    // Vérifier si le premier cœur a été vu en cours d'exécution récemment
-    if (millis() - lastSeenRunning > MONITOR_INTERVAL_SECONDS * 1000) {
-      // Si le premier cœur est bloqué depuis plus de MONITOR_INTERVAL_SECONDS secondes, redémarrer l'ESP32-S3
-      Serial.println("Le premier cœur est bloqué ! Redémarrage en cours...");
-      esp_restart();  // Redémarrer l'ESP32-S3
-    }
-    // Attendre pendant un certain temps avant de vérifier à nouveau (par exemple, toutes les 10 secondes)
-    vTaskDelay(10000 / portTICK_PERIOD_MS);  // Attendre 10 secondes
-  }
-}
-
 
 
 void setup() {
@@ -347,15 +325,7 @@ else{
   // delay(3000);
 
   Serial.println();
-xTaskCreatePinnedToCore(
-    monitorFirstCoreTask,       // Fonction de la tâche
-    "FirstCoreMonitorTask",     // Nom de la tâche
-    4096,                       // Taille de la pile
-    NULL,                       // Paramètre de la tâche
-    1,                          // Priorité de la tâche
-    NULL,                       // Handle de la tâche (inutilisé)
-    1                           // Core sur lequel la tâche doit être exécutée (core 1)
-  );
+
   /*********************************
      *  step 1 : Initialize power chip,
      *  turn on modem and gps antenna power channel
@@ -624,8 +594,6 @@ sensor.begin();
 
 void loop() {
 
-lastSeenRunning = millis();
-
 if (setup1Executed) {
     while (true) {
       // Empêcher l'exécution du code de la boucle loop
@@ -640,7 +608,6 @@ if (setup1Executed) {
   Serial.print(PMU.getBatteryPercent());
   Serial.println("%");
   sensor.requestTemperatures();
-//delay(120000); test du whatchdog
 
   //  wait until sensor is ready
   while (!sensor.isConversionComplete())
@@ -721,7 +688,7 @@ String payload3 = "";
 
   // AT+SMPUB=<topic>,<content length>,<qos>,<retain><CR>message is enteredQuit edit mode if messagelength equals to <contentlength>
   
-  snprintf(buffer, 1024, "+SMPUB=\"G3/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G5/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload1.c_str(), payload1.length());
@@ -737,7 +704,7 @@ String payload3 = "";
   delay(100);
   
   
-  snprintf(buffer, 1024, "+SMPUB=\"G3/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G5/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload2.c_str(), payload2.length());
@@ -754,7 +721,7 @@ delay(100);
 
 
   
-  snprintf(buffer, 1024, "+SMPUB=\"G3/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G5/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload3.c_str(), payload3.length());
@@ -771,7 +738,7 @@ delay(100);
 
 
 
-  snprintf(buffer, 1024, "+SMPUB=\"G3/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G5/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload4.c_str(), payload4.length());

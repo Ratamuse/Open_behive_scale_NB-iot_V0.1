@@ -1,11 +1,3 @@
-/**
- * @file      ModemMqttPulishExample.ino
- * @author    Lewis He (lewishe@outlook.com)
- * @license   MIT
- * @copyright Copyright (c) 2022  Shenzhen Xin Yuan Electronic Technology Co., Ltd
- * @date      2022-09-16
- *
- */
 #include <Arduino.h>
 #define XPOWERS_CHIP_AXP2101
 #include "XPowersLib.h"
@@ -87,7 +79,7 @@ int ledPin = 1;
 #include "ESPAsyncWebServer.h"
 #include "Preferences.h"
 
-const char* ssid = "balanceG3";
+const char* ssid = "balanceG4";
 const char* password1 = "123456789";
 
 AsyncWebServer server(80);
@@ -721,7 +713,7 @@ String payload3 = "";
 
   // AT+SMPUB=<topic>,<content length>,<qos>,<retain><CR>message is enteredQuit edit mode if messagelength equals to <contentlength>
   
-  snprintf(buffer, 1024, "+SMPUB=\"G3/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G4/%s/temp1/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload1.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload1.c_str(), payload1.length());
@@ -737,7 +729,7 @@ String payload3 = "";
   delay(100);
   
   
-  snprintf(buffer, 1024, "+SMPUB=\"G3/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G4/%s/scaleA/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload2.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload2.c_str(), payload2.length());
@@ -754,7 +746,7 @@ delay(100);
 
 
   
-  snprintf(buffer, 1024, "+SMPUB=\"G3/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G4/%s/scaleB/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload3.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload3.c_str(), payload3.length());
@@ -771,7 +763,7 @@ delay(100);
 
 
 
-  snprintf(buffer, 1024, "+SMPUB=\"G3/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
+  snprintf(buffer, 1024, "+SMPUB=\"G4/%s/bat/%s/data/%d\",%d,1,1", username, clientID, data_channel, payload4.length());
   modem.sendAT(buffer);
   if (modem.waitResponse(">") == 1) {
     modem.stream.write(payload4.c_str(), payload4.length());
