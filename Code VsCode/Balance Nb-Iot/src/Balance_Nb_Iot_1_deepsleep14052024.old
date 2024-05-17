@@ -125,28 +125,36 @@ DS18B20 sensor(&oneWire);
 #define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
 
 void deepsleep() {
-    int TimeToSleep = 0;
-    int batteryPercent = PMU.getBatteryPercent();
+  /******************* Deep sleep long ****************/
+int TimeToSleep = 0;
 
-    if (batteryPercent >= 75) {
-        TimeToSleep = 1800; // 30 minutes
-    } else if (batteryPercent >= 51) {
-        TimeToSleep = 7200; // 2 heures
-    } else if (batteryPercent >= 26) {
-        TimeToSleep = 21600; // 6 heures
-    } else if (batteryPercent >= 0) {
-        TimeToSleep = 43200; // 12 heures
-    } else {
-        // Valeur par défaut au cas où la lecture de la batterie échoue
-        TimeToSleep = 21600; // 6 heures
-    }
+  if ((PMU.getBatteryPercent()) >= 75)
+  {
+    TimeToSleep = 1800000;
+  }
 
-    // Convertir le temps de sommeil en microsecondes et vérifier l'absence de débordement
-    uint64_t sleepTimeMicroseconds = (uint64_t)TimeToSleep * uS_TO_S_FACTOR;
+  else if (((PMU.getBatteryPercent()) >= 51) && ((PMU.getBatteryPercent()) <= 74))
+  {
 
-    // Activez le timer de réveil et entrez en deep sleep
-    esp_sleep_enable_timer_wakeup(sleepTimeMicroseconds);
-    esp_deep_sleep_start();
+    TimeToSleep = 7200000;
+  }
+  else if (((PMU.getBatteryPercent()) >= 26) && ((PMU.getBatteryPercent()) <= 50))
+  {
+
+    TimeToSleep = 21600000;
+  }
+
+  else if (((PMU.getBatteryPercent()) >= 0) && ((PMU.getBatteryPercent()) <= 25))
+  {
+
+    TimeToSleep = 43200000;
+  }
+  else
+  {
+    TimeToSleep = 21600000;
+  }
+esp_sleep_enable_timer_wakeup(TimeToSleep * 1000); // Mettez l'ESP32-S3 en deep sleep pendant X minutes
+        esp_deep_sleep_start();
 }
 
 void sendCommonHTML(AsyncWebServerRequest *request, String content) {

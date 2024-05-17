@@ -122,32 +122,7 @@ bool setup1Executed = false;
 OneWire oneWire(ONE_WIRE_BUS);
 DS18B20 sensor(&oneWire);
 
-#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
 
-void deepsleep() {
-    int TimeToSleep = 0;
-    int batteryPercent = PMU.getBatteryPercent();
-
-    if (batteryPercent >= 75) {
-        TimeToSleep = 1800; // 30 minutes
-    } else if (batteryPercent >= 51) {
-        TimeToSleep = 7200; // 2 heures
-    } else if (batteryPercent >= 26) {
-        TimeToSleep = 21600; // 6 heures
-    } else if (batteryPercent >= 0) {
-        TimeToSleep = 43200; // 12 heures
-    } else {
-        // Valeur par défaut au cas où la lecture de la batterie échoue
-        TimeToSleep = 21600; // 6 heures
-    }
-
-    // Convertir le temps de sommeil en microsecondes et vérifier l'absence de débordement
-    uint64_t sleepTimeMicroseconds = (uint64_t)TimeToSleep * uS_TO_S_FACTOR;
-
-    // Activez le timer de réveil et entrez en deep sleep
-    esp_sleep_enable_timer_wakeup(sleepTimeMicroseconds);
-    esp_deep_sleep_start();
-}
 
 void sendCommonHTML(AsyncWebServerRequest *request, String content) {
   String html = "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><style>";
@@ -496,8 +471,9 @@ digitalWrite(ledPin, LOW);
       Serial.print(".");
       delay(1000);
       attempts++; // Incrémentez le compteur à chaque tentative
-      if (attempts >= 5) { // Si 10 tentatives ont échoué
-        deepsleep();
+      if (attempts >= 10) { // Si 10 tentatives ont échoué
+        esp_sleep_enable_timer_wakeup(1800 * 1000000); // Mettez l'ESP32-S3 en deep sleep pendant 30 minutes
+        esp_deep_sleep_start();
       }
     }
 
@@ -599,7 +575,8 @@ digitalWrite(ledPin, LOW);
       //delay(1000);
        PMU.disableDC3();
        PMU.disableDC5();
-  deepsleep();
+  esp_sleep_enable_timer_wakeup(1800 * 1000000); // Mettez l'ESP32-S3 en deep sleep pendant 30 minutes
+  esp_deep_sleep_start();
     }
 
   } while (ret != 1);
@@ -816,10 +793,9 @@ delay(100);
   }
   modem.sendAT("+SMDISC");
 
-  // Entrer en mode de veille profonde pendant X secondes
-  Serial.println("Entering deep sleep for X minutes");
-
-  
+  // Entrer en mode de veille profonde pendant 30 secondes
+  Serial.println("Entering deep sleep for 30 minutes...");
+  esp_sleep_enable_timer_wakeup(1800 * 1000000);  // 30 secondes en microsecondes 1800s
   modem.sendAT("+CPOWD=<1>");
   Serial.println("Modem stoppé");
   delay(100);
@@ -835,5 +811,5 @@ delay(50);
   PMU.disableDC3();
   PMU.disableDC5();
   
-  deepsleep();
+  esp_deep_sleep_start();
 }
