@@ -89,7 +89,7 @@ int ledPin = 1;
 
 // Définir le préfixe du SSID et le nom du dispositif
 const char* ssidPrefix = "balance";
-const char* deviceName = "G2";  // ou "G3" selon le microcontrôleur
+const char* deviceName = "G3";  // ou "G3" selon le microcontrôleur
 
 // Concaténer le préfixe et le nom du dispositif pour former le SSID
 String ssid = String(ssidPrefix) + String(deviceName);
