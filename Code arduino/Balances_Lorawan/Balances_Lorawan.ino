@@ -21,7 +21,7 @@ bool ENABLE_SERIAL = true;  // Enable serial debug output here if required
 #define SCL_PIN 37
 #define POWER_PIN 18
 #define POWER_PIN_STATE HIGH
-#define LED 36
+#define led 36
 #define SD_SCK 41
 #define SD_MISO 39
 #define SD_MOSI 40
@@ -228,7 +228,7 @@ float humidity4;
 char errorMessage[256];
 
 
-int ledPin = 1;
+
 
 
 
@@ -533,12 +533,11 @@ void updateFromFS(fs::FS &fs) {
     Serial.println("Could not load update.bin from sd root");
   }
 }
-//preferences.begin("my-app", false);
+
 /*****************************Void HX711*************************************************/
 
 void hx711ABCD(){
-// Initialiser les préférences
- // preferences.begin("my-app", false);
+
     
   // Récupérer la valeur de "factor1"
   float factor1 = preferences.getFloat("factor1", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
@@ -683,54 +682,6 @@ int scaleB = 0;
     
     }
 
-
-
-    void setup1(){
-      Serial.begin(115200);
-       //Start while waiting for Serial monitoring
-  while (!Serial);
-        // Si la broche est basse (LOW), exécutez la fonction "calibration"
-        
-pinMode(ledPin, OUTPUT);
-delay(50);
-digitalWrite(ledPin, HIGH);
-delay(50);
-digitalWrite(ledPin, LOW);
-delay(50);
-digitalWrite(ledPin, HIGH);
-delay(50);
-digitalWrite(ledPin, LOW);
-delay(50);
-digitalWrite(ledPin, HIGH);
-delay(50);
-digitalWrite(ledPin, LOW);
-delay(50);
-digitalWrite(ledPin, HIGH);
-delay(50);
-digitalWrite(ledPin, LOW);
-        scale1.begin(dataPin1, clockPin1);
-        scale2.begin(dataPin2, clockPin2);
-        scale3.begin(dataPin3, clockPin3);
-        scale4.begin(dataPin4, clockPin4);
-  // Créer un point d'accès WiFi au lieu de se connecter à un réseau WiFi
- WiFi.softAP(ssid.c_str(), password1);
-  Serial.println("Point d'accès WiFi créé");
-
-  server.on("/", HTTP_GET, handleRoot);
-  server.on("/calibrate1", HTTP_GET, handleCalibration1);
-  server.on("/calibrate2", HTTP_GET, handleCalibration2);
-  server.on("/calibrate3", HTTP_GET, handleCalibration3);
-  server.on("/calibrate4", HTTP_GET, handleCalibration4);
-  server.on("/weight1", HTTP_GET, handleWeight1);
-  server.on("/weight2", HTTP_GET, handleWeight2);
-  server.on("/weight3", HTTP_GET, handleWeight3);
-  server.on("/weight4", HTTP_GET, handleWeight4);
-  server.on("/reboot", HTTP_POST, handleReboot);
-server.begin();
-  setup1Executed = true;
-  
-        
-    }
 int gpioPin = 11;
 
 #define MONITOR_INTERVAL_SECONDS 300
@@ -754,6 +705,57 @@ void monitorFirstCoreTask(void * parameter) {
     vTaskDelay(10000 / portTICK_PERIOD_MS);  // Attendre 10 secondes
   }
 }
+
+    void setup1(){
+      Serial.begin(115200);
+       //Start while waiting for Serial monitoring
+  while (!Serial);
+        // Si la broche est basse (LOW), exécutez la fonction "calibration"
+  pinMode(POWER_PIN, OUTPUT);
+  digitalWrite(POWER_PIN, POWER_PIN_STATE);
+  delay(50);
+
+pinMode(led, OUTPUT);
+delay(50);
+digitalWrite(led, HIGH);
+delay(50);
+digitalWrite(led, LOW);
+delay(50);
+digitalWrite(led, HIGH);
+delay(50);
+digitalWrite(led, LOW);
+delay(50);
+digitalWrite(led, HIGH);
+delay(50);
+digitalWrite(led, LOW);
+delay(50);
+digitalWrite(led, HIGH);
+delay(50);
+digitalWrite(led, LOW);
+        scale1.begin(dataPin1, clockPin1);
+        scale2.begin(dataPin2, clockPin2);
+        scale3.begin(dataPin3, clockPin3);
+        scale4.begin(dataPin4, clockPin4);
+  // Créer un point d'accès WiFi au lieu de se connecter à un réseau WiFi
+ WiFi.softAP(ssid.c_str(), password1);
+  Serial.println("Point d'accès WiFi créé");
+
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/calibrate1", HTTP_GET, handleCalibration1);
+  server.on("/calibrate2", HTTP_GET, handleCalibration2);
+  server.on("/calibrate3", HTTP_GET, handleCalibration3);
+  server.on("/calibrate4", HTTP_GET, handleCalibration4);
+  server.on("/weight1", HTTP_GET, handleWeight1);
+  server.on("/weight2", HTTP_GET, handleWeight2);
+  server.on("/weight3", HTTP_GET, handleWeight3);
+  server.on("/weight4", HTTP_GET, handleWeight4);
+  server.on("/reboot", HTTP_POST, handleReboot);
+server.begin();
+  setup1Executed = true;
+  
+        
+    }
+
 
 
 void setup() {
@@ -782,18 +784,44 @@ else{
   delay(10);
   pinMode(POWER_PIN, OUTPUT);
   digitalWrite(POWER_PIN, POWER_PIN_STATE);
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, LOW);
+  
+delay(50);
+
 
   Wire.begin(SDA_PIN, SCL_PIN);
 
+
+ Serial.println();
+xTaskCreatePinnedToCore(
+    monitorFirstCoreTask,       // Fonction de la tâche
+    "FirstCoreMonitorTask",     // Nom de la tâche
+    4096,                       // Taille de la pile
+    NULL,                       // Paramètre de la tâche
+    1,                          // Priorité de la tâche
+    NULL,                       // Handle de la tâche (inutilisé)
+    1                           // Core sur lequel la tâche doit être exécutée (core 1)
+  );
+
+pinMode(led, OUTPUT);
+delay(50);
+digitalWrite(led, HIGH);
+delay(50);
+digitalWrite(led, LOW);
+delay(50);
+digitalWrite(led, HIGH);
+delay(50);
+digitalWrite(led, LOW);
+delay(50);
+digitalWrite(led, HIGH);
+delay(50);
+digitalWrite(led, LOW);
+delay(50);
+digitalWrite(led, HIGH);
+delay(50);
+digitalWrite(led, LOW);
+
+
 /*******************HX711***********************************/
-
-/*********************************
-    * step 7 : setup scales
-    ***********************************/
-
-
 
 // Initialiser les préférences
   preferences.begin("my-app", false);
@@ -909,10 +937,6 @@ Serial.println("Offset 4: " + String(offset4, 6));
 
 
 
-
-  //will not be reached
-
-
   /*********************Sht4x*******************************/
 
   // Initialize I2C multiplexor
@@ -981,12 +1005,8 @@ void loop() {
           break;
         }
       case DEVICE_STATE_SLEEP:
-        {
-
-          
+        {         
           LoRaWAN.sleep(loraWanClass);
-
-
           break;
         }
       default:
