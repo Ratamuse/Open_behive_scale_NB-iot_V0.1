@@ -55,7 +55,7 @@ LoRaMacRegion_t loraWanRegion = ACTIVE_REGION;
 DeviceClass_t loraWanClass = CLASS_A;
 
 /*the application data transmission duty cycle.  value in [ms].*/
-uint32_t appTxDutyCycle = 600000;
+uint32_t appTxDutyCycle = 15000;
 unsigned long previousTime = 0;
 
 
@@ -69,7 +69,7 @@ bool loraWanAdr = true;
 bool isTxConfirmed = false;
 
 /* Application port */
-uint8_t appPort = 1;
+uint8_t appPort = 2;
 
 /*!
    Number of trials to transmit the frame, if the LoRaMAC layer did not
@@ -125,14 +125,14 @@ SPIClass *hspi = NULL;
 #include "Preferences.h"
 
 // Définir le préfixe du SSID et le nom du dispositif
-const char* ssidPrefix = "balance";
-const char* deviceName = "G3";  // ou "G3" selon le microcontrôleur
+const char *ssidPrefix = "balance";
+const char *deviceName = "G8";  // ou "G3" selon le microcontrôleur
 
 // Concaténer le préfixe et le nom du dispositif pour former le SSID
 String ssid = String(ssidPrefix) + String(deviceName);
 
 // Déclarer le mot de passe
-const char* password1 = "123456789";
+const char *password1 = "123456789";
 
 AsyncWebServer server(80);
 Preferences preferences;
@@ -176,31 +176,31 @@ void rebootEspWithReason(String reason) {
   delay(100);
 }
 
-#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
+#define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
 
 void deepsleep() {
-    int TimeToSleep = 0;
-    int soc = lipo.getSOC();
+  int TimeToSleep = 0;
+  int soc = lipo.getSOC();
 
-    if (soc >= 75) {
-        TimeToSleep = 1800; // 30 minutes
-    } else if (soc >= 51) {
-        TimeToSleep = 7200; // 2 heures
-    } else if (soc >= 26) {
-        TimeToSleep = 21600; // 6 heures
-    } else if (soc >= 0) {
-        TimeToSleep = 43200; // 12 heures
-    } else {
-        // Valeur par défaut au cas où la lecture de la batterie échoue
-        TimeToSleep = 21600; // 6 heures
-    }
+  if (soc >= 75) {
+    TimeToSleep = 1800;  // 30 minutes
+  } else if (soc >= 51) {
+    TimeToSleep = 7200;  // 2 heures
+  } else if (soc >= 26) {
+    TimeToSleep = 21600;  // 6 heures
+  } else if (soc >= 0) {
+    TimeToSleep = 43200;  // 12 heures
+  } else {
+    // Valeur par défaut au cas où la lecture de la batterie échoue
+    TimeToSleep = 21600;  // 6 heures
+  }
 
-    // Convertir le temps de sommeil en microsecondes et vérifier l'absence de débordement
-    uint64_t sleepTimeMicroseconds = (uint64_t)TimeToSleep * uS_TO_S_FACTOR;
+  // Convertir le temps de sommeil en microsecondes et vérifier l'absence de débordement
+  uint64_t sleepTimeMicroseconds = (uint64_t)TimeToSleep * uS_TO_S_FACTOR;
 
-    // Activez le timer de réveil et entrez en deep sleep
-    esp_sleep_enable_timer_wakeup(sleepTimeMicroseconds);
-    esp_deep_sleep_start();
+  // Activez le timer de réveil et entrez en deep sleep
+  esp_sleep_enable_timer_wakeup(sleepTimeMicroseconds);
+  esp_deep_sleep_start();
 }
 
 
@@ -241,23 +241,23 @@ HX711 scale1;
 HX711 scale2;
 HX711 scale3;
 HX711 scale4;
-uint8_t dataPin1 = 48;
-uint8_t clockPin1 = 47;
-uint8_t dataPin2 = 14;
-uint8_t clockPin2 = 13;
-uint8_t dataPin3 = 48;
-uint8_t clockPin3 = 47;
-uint8_t dataPin4 = 14;
-uint8_t clockPin4 = 13;
+uint8_t dataPin1 = 5;
+uint8_t clockPin1 = 15;
+uint8_t dataPin2 = 4;
+uint8_t clockPin2 = 47;
+uint8_t dataPin3 = 7;
+uint8_t clockPin3 = 6;
+uint8_t dataPin4 = 2;
+uint8_t clockPin4 = 3;
 
 /********************serveur web***************************/
 
 void sendCommonHTML(AsyncWebServerRequest *request, String content) {
   String html = "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><style>";
   html += "body { font-family: Arial, sans-serif; text-align: center; background-color: #FFF176; /* Couleur jaune miel */ }";
-  html += "h1 { color: #8D6E63; /* Marron foncé */ }"; // Couleur marron foncé pour les titres
+  html += "h1 { color: #8D6E63; /* Marron foncé */ }";  // Couleur marron foncé pour les titres
   html += "input[type=submit] { background-color: #FFD54F; /* Jaune miel clair */ color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 10px; }";
-  html += "input[type=checkbox] { margin-bottom: 20px; }"; // Espacement vertical pour les cases à cocher
+  html += "input[type=checkbox] { margin-bottom: 20px; }";  // Espacement vertical pour les cases à cocher
   html += "</style></head><body>";
   html += "<h1>Calibration des balances</h1>";
   html += "<p>Choisir la balance à calibrer</p>";
@@ -268,7 +268,7 @@ void sendCommonHTML(AsyncWebServerRequest *request, String content) {
 }
 
 void handleRoot(AsyncWebServerRequest *request) {
-  String content = "<div style=\"display: inline-block;\">"; // Div pour aligner les boutons horizontalement
+  String content = "<div style=\"display: inline-block;\">";  // Div pour aligner les boutons horizontalement
   content += "<form action=\"/calibrate1\" method=\"get\">";
   content += "<input type=\"submit\" value=\"Calibration balance 1\">";
   content += "</form>";
@@ -354,7 +354,7 @@ void handleWeight1(AsyncWebServerRequest *request) {
     message += "<form action=\"/reboot\" method=\"post\">";
     message += "<button type=\"submit\">Redémarrer l'ESP32</button>";
     message += "</form>";
-    
+
     delay(1000);
 
     // Save scale value to ESP32's EEPROM
@@ -380,14 +380,14 @@ void handleWeight2(AsyncWebServerRequest *request) {
     float scaleb = scale2.get_scale();
     uint32_t offset2 = scale2.get_offset();
     message = "<p>Calibration terminée. Factor 2: " + String(scaleb, 6) + ", Offset 2: " + String(offset2) + "</p>";
-    
+
     // Button to trigger ESP32 reboot
     message += "<form action=\"/reboot\" method=\"post\">";
     message += "<button type=\"submit\">Redémarrer l'ESP32</button>";
     message += "</form>";
-    
+
     delay(1000);
-    
+
     // Save scale value to ESP32's EEPROM
     preferences.begin("my-app", false);
     preferences.putFloat("factor2", scaleb);
@@ -416,7 +416,7 @@ void handleWeight3(AsyncWebServerRequest *request) {
     message += "<form action=\"/reboot\" method=\"post\">";
     message += "<button type=\"submit\">Redémarrer l'ESP32</button>";
     message += "</form>";
-    
+
     delay(1000);
 
     // Save scale value to ESP32's EEPROM
@@ -442,14 +442,14 @@ void handleWeight4(AsyncWebServerRequest *request) {
     float scaled = scale4.get_scale();
     uint32_t offset4 = scale4.get_offset();
     message = "<p>Calibration terminée. Factor 4: " + String(scaled, 6) + ", Offset 4: " + String(offset4) + "</p>";
-    
+
     // Button to trigger ESP32 reboot
     message += "<form action=\"/reboot\" method=\"post\">";
     message += "<button type=\"submit\">Redémarrer l'ESP32</button>";
     message += "</form>";
-    
+
     delay(1000);
-    
+
     // Save scale value to ESP32's EEPROM
     preferences.begin("my-app", false);
     preferences.putFloat("factor4", scaled);
@@ -536,54 +536,55 @@ void updateFromFS(fs::FS &fs) {
 
 /*****************************Void HX711*************************************************/
 
-void hx711ABCD(){
+void hx711ABCD() {
 
-    
+
   // Récupérer la valeur de "factor1"
-  float factor1 = preferences.getFloat("factor1", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
-  
+  float factor1 = preferences.getFloat("factor1", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
+
   // Récupérer la valeur de "factor2"
-  float factor2 = preferences.getFloat("factor2", 0.0); // 0.0 est la valeur par défaut si "factor2" n'est pas trouvé
+  float factor2 = preferences.getFloat("factor2", 0.0);  // 0.0 est la valeur par défaut si "factor2" n'est pas trouvé
 
   // Récupérer la valeur de "factor3"
-  float factor3 = preferences.getFloat("factor3", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
-  
+  float factor3 = preferences.getFloat("factor3", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
+
   // Récupérer la valeur de "factor4"
-  float factor4 = preferences.getFloat("factor4", 0.0); // 0.0 est la valeur par défaut si "factor2" n'est pas trouvé
+  float factor4 = preferences.getFloat("factor4", 0.0);  // 0.0 est la valeur par défaut si "factor2" n'est pas trouvé
 
- // Récupérer la valeur de "offset1"
-float offset1 = preferences.getFloat("offset1", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
+  // Récupérer la valeur de "offset1"
+  float offset1 = preferences.getFloat("offset1", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
 
-// Récupérer la valeur de "offset2"
-float offset2 = preferences.getFloat("offset2", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
+  // Récupérer la valeur de "offset2"
+  float offset2 = preferences.getFloat("offset2", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
 
-// Récupérer la valeur de "offset3"
-float offset3 = preferences.getFloat("offset3", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
+  // Récupérer la valeur de "offset3"
+  float offset3 = preferences.getFloat("offset3", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
 
-// Récupérer la valeur de "offset4"
-float offset4 = preferences.getFloat("offset4", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé    
+  // Récupérer la valeur de "offset4"
+  float offset4 = preferences.getFloat("offset4", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
   // Terminer l'utilisation des préférences
   preferences.end();
 
-int scaleA = 0;
+  int scaleA = 0;
   if (scale1.is_ready())
     delay(200);
   {
-    scaleA = static_cast<int>(((scale1.read_average(10)-offset1)/factor1));
-    
-   Serial.print("ScaleA:");
+    scaleA = static_cast<int>(((scale1.read_average(10) - offset1) / factor1));
+
+    Serial.print("ScaleA:");
     Serial.println(scaleA);
   }
 
   delay(200);
 
 
-int scaleB = 0;
+  int scaleB = 0;
 
-  if (scale2.is_ready());
-    delay(200);
+  if (scale2.is_ready())
+    ;
+  delay(200);
   {
-   scaleB = static_cast<int>(((scale2.read_average(10)-offset2)/factor2));
+    scaleB = static_cast<int>(((scale2.read_average(10) - offset2) / factor2));
     Serial.print("ScaleB:");
     Serial.println(scaleB);
 
@@ -591,25 +592,25 @@ int scaleB = 0;
   }
   delay(200);
 
-int scaleC = 0;
+  int scaleC = 0;
   if (scale3.is_ready())
     delay(200);
   {
-    scaleC = static_cast<int>(((scale3.read_average(10)-offset3)/factor3));
-    
-   Serial.print("ScaleC:");
+    scaleC = static_cast<int>(((scale3.read_average(10) - offset3) / factor3));
+
+    Serial.print("ScaleC:");
     Serial.println(scaleC);
   }
 
   delay(200);
 
-int scaleD = 0;
+  int scaleD = 0;
   if (scale4.is_ready())
     delay(200);
   {
-    scaleD = static_cast<int>(((scale4.read_average(10)-offset4)/factor4));
-    
-   Serial.print("ScaleD:");
+    scaleD = static_cast<int>(((scale4.read_average(10) - offset4) / factor4));
+
+    Serial.print("ScaleD:");
     Serial.println(scaleD);
   }
 
@@ -617,6 +618,16 @@ int scaleD = 0;
 }
 
 /***************************** Prepares the payload of the frame ************************/
+/* Function prototypes */
+static void prepareTxFrame1(uint8_t port);
+static void prepareTxFrame2(uint8_t port);
+
+
+/* Array of frame preparation functions */
+typedef void (*PrepareTxFrameFunc)(uint8_t port);
+PrepareTxFrameFunc prepareTxFrameFuncs[] = { prepareTxFrame1, prepareTxFrame2 };
+uint8_t currentFrameIndex = 0;
+uint8_t totalFrames = sizeof(prepareTxFrameFuncs) / sizeof(prepareTxFrameFuncs[0]);
 
 static void prepareTxFrame1(uint8_t port) {
 
@@ -624,47 +635,46 @@ static void prepareTxFrame1(uint8_t port) {
   Serial.print("on commence ici de preparer les frames");
 
 
- // Récupérer la valeur de "factor1"
-  float factor1 = preferences.getFloat("factor1", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
-// Récupérer la valeur de "offset1"
-float offset1 = preferences.getFloat("offset1", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
-int scaleA = 0;
+  // Récupérer la valeur de "factor1"
+  float factor1 = preferences.getFloat("factor1", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
+  // Récupérer la valeur de "offset1"
+  float offset1 = preferences.getFloat("offset1", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
+  int scaleA = 0;
   if (scale1.is_ready())
     delay(200);
   {
-    scaleA = static_cast<int>(((scale1.read_average(10)-offset1)/factor1));
-    
-   Serial.print("ScaleA:");
+    scaleA = static_cast<int>(((scale1.read_average(10) - offset1) / factor1));
+
+    Serial.print("ScaleA:");
     Serial.println(scaleA);
   }
 
   delay(200);
 
 
-  CayenneLPP lpp(51); //déterminer le max payload
+  CayenneLPP lpp(51);  //déterminer le max payload
   lpp.reset();
-  
+
   lpp.addAnalogInput(17, scaleA);
-  
+
   appDataSize = lpp.getSize();
   memcpy(appData, lpp.getBuffer(), lpp.getSize());
-
-    
-    }
-  static void prepareTxFrame2(uint8_t port) {
+}
+static void prepareTxFrame2(uint8_t port) {
 
   Serial.print("on commence ici de preparer les frames");
-  
- // Récupérer la valeur de "factor2"
-  float factor2 = preferences.getFloat("factor2", 0.0); // 0.0 est la valeur par défaut si "factor2" n'est pas trouvé
-// Récupérer la valeur de "offset2"
-float offset2 = preferences.getFloat("offset2", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
-int scaleB = 0;
 
-  if (scale2.is_ready());
-    delay(200);
+  // Récupérer la valeur de "factor2"
+  float factor2 = preferences.getFloat("factor2", 0.0);  // 0.0 est la valeur par défaut si "factor2" n'est pas trouvé
+  // Récupérer la valeur de "offset2"
+  float offset2 = preferences.getFloat("offset2", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
+  int scaleB = 0;
+
+  if (scale2.is_ready())
+    ;
+  delay(200);
   {
-   scaleB = static_cast<int>(((scale2.read_average(10)-offset2)/factor2));
+    scaleB = static_cast<int>(((scale2.read_average(10) - offset2) / factor2));
     Serial.print("ScaleB:");
     Serial.println(scaleB);
 
@@ -672,15 +682,13 @@ int scaleB = 0;
   }
   delay(200);
 
-  CayenneLPP lpp(51); //déterminer le max payload
+  CayenneLPP lpp(51);  //déterminer le max payload
   lpp.reset();
   lpp.addAnalogInput(18, scaleB);
- 
+
   appDataSize = lpp.getSize();
   memcpy(appData, lpp.getBuffer(), lpp.getSize());
-
-    
-    }
+}
 
 int gpioPin = 11;
 
@@ -690,9 +698,9 @@ int gpioPin = 11;
 unsigned long lastSeenRunning = 0;
 
 // Déclaration de la fonction pour la tâche de surveillance du premier cœur
-void monitorFirstCoreTask(void * parameter);
+void monitorFirstCoreTask(void *parameter);
 // Fonction pour la tâche de surveillance du premier cœur
-void monitorFirstCoreTask(void * parameter) {
+void monitorFirstCoreTask(void *parameter) {
   // Boucle infinie pour la surveillance
   while (true) {
     // Vérifier si le premier cœur a été vu en cours d'exécution récemment
@@ -706,38 +714,39 @@ void monitorFirstCoreTask(void * parameter) {
   }
 }
 
-    void setup1(){
-      Serial.begin(115200);
-       //Start while waiting for Serial monitoring
-  while (!Serial);
-        // Si la broche est basse (LOW), exécutez la fonction "calibration"
+void setup1() {
+  Serial.begin(115200);
+  //Start while waiting for Serial monitoring
+  while (!Serial)
+    ;
+  // Si la broche est basse (LOW), exécutez la fonction "calibration"
   pinMode(POWER_PIN, OUTPUT);
   digitalWrite(POWER_PIN, POWER_PIN_STATE);
   delay(50);
 
-pinMode(led, OUTPUT);
-delay(50);
-digitalWrite(led, HIGH);
-delay(50);
-digitalWrite(led, LOW);
-delay(50);
-digitalWrite(led, HIGH);
-delay(50);
-digitalWrite(led, LOW);
-delay(50);
-digitalWrite(led, HIGH);
-delay(50);
-digitalWrite(led, LOW);
-delay(50);
-digitalWrite(led, HIGH);
-delay(50);
-digitalWrite(led, LOW);
-        scale1.begin(dataPin1, clockPin1);
-        scale2.begin(dataPin2, clockPin2);
-        scale3.begin(dataPin3, clockPin3);
-        scale4.begin(dataPin4, clockPin4);
+  pinMode(led, OUTPUT);
+  delay(50);
+  digitalWrite(led, HIGH);
+  delay(50);
+  digitalWrite(led, LOW);
+  delay(50);
+  digitalWrite(led, HIGH);
+  delay(50);
+  digitalWrite(led, LOW);
+  delay(50);
+  digitalWrite(led, HIGH);
+  delay(50);
+  digitalWrite(led, LOW);
+  delay(50);
+  digitalWrite(led, HIGH);
+  delay(50);
+  digitalWrite(led, LOW);
+  scale1.begin(dataPin1, clockPin1);
+  scale2.begin(dataPin2, clockPin2);
+  scale3.begin(dataPin3, clockPin3);
+  scale4.begin(dataPin4, clockPin4);
   // Créer un point d'accès WiFi au lieu de se connecter à un réseau WiFi
- WiFi.softAP(ssid.c_str(), password1);
+  WiFi.softAP(ssid.c_str(), password1);
   Serial.println("Point d'accès WiFi créé");
 
   server.on("/", HTTP_GET, handleRoot);
@@ -750,11 +759,9 @@ digitalWrite(led, LOW);
   server.on("/weight3", HTTP_GET, handleWeight3);
   server.on("/weight4", HTTP_GET, handleWeight4);
   server.on("/reboot", HTTP_POST, handleReboot);
-server.begin();
+  server.begin();
   setup1Executed = true;
-  
-        
-    }
+}
 
 
 
@@ -762,274 +769,275 @@ void setup() {
 
   pinMode(gpioPin, INPUT_PULLUP);
 
-    // Lecture de l'état de la broche GPIO 2
-    
-
-    if (digitalRead(gpioPin) == LOW) {
-setup1();
-}
-else{
-         
-
-  uint8_t cardType;
-  if (ENABLE_SERIAL) {
-    Serial.begin(115200);
-  }
-
-  
-
-  previousTime = millis();
+  // Lecture de l'état de la broche GPIO 2
 
 
-  delay(10);
-  pinMode(POWER_PIN, OUTPUT);
-  digitalWrite(POWER_PIN, POWER_PIN_STATE);
-  
-delay(50);
-
-
-  Wire.begin(SDA_PIN, SCL_PIN);
-
-
- Serial.println();
-xTaskCreatePinnedToCore(
-    monitorFirstCoreTask,       // Fonction de la tâche
-    "FirstCoreMonitorTask",     // Nom de la tâche
-    4096,                       // Taille de la pile
-    NULL,                       // Paramètre de la tâche
-    1,                          // Priorité de la tâche
-    NULL,                       // Handle de la tâche (inutilisé)
-    1                           // Core sur lequel la tâche doit être exécutée (core 1)
-  );
-
-pinMode(led, OUTPUT);
-delay(50);
-digitalWrite(led, HIGH);
-delay(50);
-digitalWrite(led, LOW);
-delay(50);
-digitalWrite(led, HIGH);
-delay(50);
-digitalWrite(led, LOW);
-delay(50);
-digitalWrite(led, HIGH);
-delay(50);
-digitalWrite(led, LOW);
-delay(50);
-digitalWrite(led, HIGH);
-delay(50);
-digitalWrite(led, LOW);
-
-
-/*******************HX711***********************************/
-
-// Initialiser les préférences
-  preferences.begin("my-app", false);
- // Récupérer les valeurs des factors
-float factor1 = preferences.getFloat("factor1", 0.0); // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
-float factor2 = preferences.getFloat("factor2", 0.0); // 0.0 est la valeur par défaut si "factor2" n'est pas trouvé
-float factor3 = preferences.getFloat("factor3", 0.0); // 0.0 est la valeur par défaut si "factor3" n'est pas trouvé
-float factor4 = preferences.getFloat("factor4", 0.0); // 0.0 est la valeur par défaut si "factor4" n'est pas trouvé
-
-// Récupérer les valeurs des offsets
-float offset1 = preferences.getFloat("offset1", 0.0); // 0.0 est la valeur par défaut si "offset1" n'est pas trouvé
-float offset2 = preferences.getFloat("offset2", 0.0); // 0.0 est la valeur par défaut si "offset2" n'est pas trouvé
-float offset3 = preferences.getFloat("offset3", 0.0); // 0.0 est la valeur par défaut si "offset3" n'est pas trouvé
-float offset4 = preferences.getFloat("offset4", 0.0); // 0.0 est la valeur par défaut si "offset4" n'est pas trouvé
-
-    
-  // Terminer l'utilisation des préférences
-  preferences.end();
-    
-  // Utiliser factor1, factor2, factor3 et factor4 dans votre code
-Serial.println("Factor 1: " + String(factor1, 6));
-Serial.println("Factor 2: " + String(factor2, 6));
-Serial.println("Factor 3: " + String(factor3, 6));
-Serial.println("Factor 4: " + String(factor4, 6));
-
-// Utiliser offset1, offset2, offset3 et offset4 dans votre code
-Serial.println("Offset 1: " + String(offset1, 6));
-Serial.println("Offset 2: " + String(offset2, 6));
-Serial.println("Offset 3: " + String(offset3, 6));
-Serial.println("Offset 4: " + String(offset4, 6));
-
- // Initialiser les échelles et configurer les facteurs
-  scale1.begin(dataPin1, clockPin1);
-  scale1.set_scale(factor1);
-
-  scale2.begin(dataPin2, clockPin2);
-  scale2.set_scale(factor2);
-
-  scale3.begin(dataPin3, clockPin3);
-  scale3.set_scale(factor3);
-
-  scale4.begin(dataPin4, clockPin4);
-  scale4.set_scale(factor4);
-
-  /*********************MS5611*******************************/
-  // Initialize MS5611
-  Serial.println();
-  Serial.println(__FILE__);
-  Serial.print("MS5611_LIB_VERSION: ");
-  Serial.println(MS5611_LIB_VERSION);
-
-
-
-  if (MS5611.begin() == true) {
-    Serial.println("MS5611 found.");
+  if (digitalRead(gpioPin) == LOW) {
+    setup1();
   } else {
-    Serial.println("MS5611 not found. halt.");
-    while (1)
-      ;
-  }
 
-  
-  /*****************SD update*********************************/
-  //initialise two instances of the SPIClass attached to VSPI and HSPI respectively
-  vspi = new SPIClass(VSPI);
-  hspi = new SPIClass(HSPI);
 
-  //clock miso mosi ss
+    uint8_t cardType;
+    if (ENABLE_SERIAL) {
+      Serial.begin(115200);
+    }
+
+
+
+    previousTime = millis();
+
+
+    delay(10);
+    pinMode(POWER_PIN, OUTPUT);
+    digitalWrite(POWER_PIN, POWER_PIN_STATE);
+
+    delay(50);
+    Mcu.begin();
+
+    Wire.begin(SDA_PIN, SCL_PIN);
+
+
+    Serial.println();
+    xTaskCreatePinnedToCore(
+      monitorFirstCoreTask,    // Fonction de la tâche
+      "FirstCoreMonitorTask",  // Nom de la tâche
+      4096,                    // Taille de la pile
+      NULL,                    // Paramètre de la tâche
+      1,                       // Priorité de la tâche
+      NULL,                    // Handle de la tâche (inutilisé)
+      1                        // Core sur lequel la tâche doit être exécutée (core 1)
+    );
+
+    pinMode(led, OUTPUT);
+    delay(50);
+    digitalWrite(led, HIGH);
+    delay(50);
+    digitalWrite(led, LOW);
+    delay(50);
+    digitalWrite(led, HIGH);
+    delay(50);
+    digitalWrite(led, LOW);
+    delay(50);
+    digitalWrite(led, HIGH);
+    delay(50);
+    digitalWrite(led, LOW);
+    delay(50);
+    digitalWrite(led, HIGH);
+    delay(50);
+    digitalWrite(led, LOW);
+
+
+    /*******************HX711***********************************/
+
+    // Initialiser les préférences
+    preferences.begin("my-app", false);
+    // Récupérer les valeurs des factors
+    float factor1 = preferences.getFloat("factor1", 0.0);  // 0.0 est la valeur par défaut si "factor1" n'est pas trouvé
+    float factor2 = preferences.getFloat("factor2", 0.0);  // 0.0 est la valeur par défaut si "factor2" n'est pas trouvé
+    float factor3 = preferences.getFloat("factor3", 0.0);  // 0.0 est la valeur par défaut si "factor3" n'est pas trouvé
+    float factor4 = preferences.getFloat("factor4", 0.0);  // 0.0 est la valeur par défaut si "factor4" n'est pas trouvé
+
+    // Récupérer les valeurs des offsets
+    float offset1 = preferences.getFloat("offset1", 0.0);  // 0.0 est la valeur par défaut si "offset1" n'est pas trouvé
+    float offset2 = preferences.getFloat("offset2", 0.0);  // 0.0 est la valeur par défaut si "offset2" n'est pas trouvé
+    float offset3 = preferences.getFloat("offset3", 0.0);  // 0.0 est la valeur par défaut si "offset3" n'est pas trouvé
+    float offset4 = preferences.getFloat("offset4", 0.0);  // 0.0 est la valeur par défaut si "offset4" n'est pas trouvé
+
+
+    // Terminer l'utilisation des préférences
+    preferences.end();
+
+    // Utiliser factor1, factor2, factor3 et factor4 dans votre code
+    Serial.println("Factor 1: " + String(factor1, 6));
+    Serial.println("Factor 2: " + String(factor2, 6));
+    Serial.println("Factor 3: " + String(factor3, 6));
+    Serial.println("Factor 4: " + String(factor4, 6));
+
+    // Utiliser offset1, offset2, offset3 et offset4 dans votre code
+    Serial.println("Offset 1: " + String(offset1, 6));
+    Serial.println("Offset 2: " + String(offset2, 6));
+    Serial.println("Offset 3: " + String(offset3, 6));
+    Serial.println("Offset 4: " + String(offset4, 6));
+
+    // Initialiser les échelles et configurer les facteurs
+    scale1.begin(dataPin1, clockPin1);
+    scale1.set_scale(factor1);
+
+    scale2.begin(dataPin2, clockPin2);
+    scale2.set_scale(factor2);
+
+    scale3.begin(dataPin3, clockPin3);
+    scale3.set_scale(factor3);
+
+    scale4.begin(dataPin4, clockPin4);
+    scale4.set_scale(factor4);
+
+    /*********************MS5611*******************************/
+    // Initialize MS5611
+    Serial.println();
+    Serial.println(__FILE__);
+    Serial.print("MS5611_LIB_VERSION: ");
+    Serial.println(MS5611_LIB_VERSION);
+
+
+
+    if (MS5611.begin() == true) {
+      Serial.println("MS5611 found.");
+    } else {
+      Serial.println("MS5611 not found. halt.");
+      while (1)
+        ;
+    }
+
+
+    /*****************SD update*********************************/
+    //initialise two instances of the SPIClass attached to VSPI and HSPI respectively
+    vspi = new SPIClass(VSPI);
+    hspi = new SPIClass(HSPI);
+
+    //clock miso mosi ss
 
 #ifndef ALTERNATE_PINS
-  //initialise vspi with default pins
-  //SCLK = 18, MISO = 19, MOSI = 23, SS = 5
-  vspi->begin();
+    //initialise vspi with default pins
+    //SCLK = 18, MISO = 19, MOSI = 23, SS = 5
+    vspi->begin();
 #else
-  //alternatively route through GPIO pins of your choice
-  vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, VSPI_SS);  //SCLK, MISO, MOSI, SS
+    //alternatively route through GPIO pins of your choice
+    vspi->begin(VSPI_SCLK, VSPI_MISO, VSPI_MOSI, VSPI_SS);  //SCLK, MISO, MOSI, SS
 #endif
 
 #ifndef ALTERNATE_PINS
-  //initialise hspi with default pins
-  //SCLK = 14, MISO = 12, MOSI = 13, SS = 15
-  hspi->begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI, HSPI_SS);
+    //initialise hspi with default pins
+    //SCLK = 14, MISO = 12, MOSI = 13, SS = 15
+    hspi->begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI, HSPI_SS);
 #else
-  //alternatively route through GPIO pins
-  hspi->begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI, HSPI_SS);  //SCLK, MISO, MOSI, SS
+    //alternatively route through GPIO pins
+    hspi->begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI, HSPI_SS);  //SCLK, MISO, MOSI, SS
 #endif
 
-  //set up slave select pins as outputs as the Arduino API
-  //doesn't handle automatically pulling SS low
-  pinMode(vspi->pinSS(), OUTPUT);  //VSPI SS
-  pinMode(hspi->pinSS(), OUTPUT);  //HSPI SS
+    //set up slave select pins as outputs as the Arduino API
+    //doesn't handle automatically pulling SS low
+    pinMode(vspi->pinSS(), OUTPUT);  //VSPI SS
+    pinMode(hspi->pinSS(), OUTPUT);  //HSPI SS
 
 
 
 
-  Serial.println("Welcome to the SD-Update example!");
+    Serial.println("Welcome to the SD-Update example!");
 
-  // You can uncomment this and build again
-  // Serial.println("Update successfull");
+    // You can uncomment this and build again
+    // Serial.println("Update successfull");
 
-  //first init and check SD card
-  if (!SD.begin(42, *hspi, spiClk)) {
-    rebootEspWithReason("Card Mount Failed");
+    //first init and check SD card
+    if (!SD.begin(42, *hspi, spiClk)) {
+      rebootEspWithReason("Card Mount Failed");
+    }
+
+    cardType = SD.cardType();
+
+    if (cardType == CARD_NONE) {
+      rebootEspWithReason("No SD_MMC card attached");
+    } else {
+      updateFromFS(SD);
+    }
+
+
+
+    /*********************Sht4x*******************************/
+
+    // Initialize I2C multiplexor
+    i2cMux.begin();
+    sht4x.begin(Wire, SHT40_I2C_ADDR_44);
+
+    /*****************MAX17048******************************************/
+
+    lipo.enableDebugging();  // Uncomment this line to enable helpful debug messages on Serial
+
+    // Set up the MAX17043 LiPo fuel gauge:
+    if (lipo.begin() == false)  // Connect to the MAX17043 using the default wire port
+    {
+      Serial.println(F("MAX17048 not detected. Please check wiring. Freezing."));
+      while (1)
+        ;
+    }
+    // Quick start restarts the MAX17043 in hopes of getting a more accurate
+    // guess for the SOC.
+    lipo.quickStart();
+
+    // We can set an interrupt to alert when the battery SoC gets too low.
+    // We can alert at anywhere between 1% - 32%:
+    lipo.setThreshold(20);  // Set alert threshold to 20%.
+
+    deviceState = DEVICE_STATE_INIT;
   }
-
-  cardType = SD.cardType();
-
-  if (cardType == CARD_NONE) {
-    rebootEspWithReason("No SD_MMC card attached");
-  } else {
-    updateFromFS(SD);
-  }
-
-
-
-  /*********************Sht4x*******************************/
-
-  // Initialize I2C multiplexor
-  i2cMux.begin();
-  sht4x.begin(Wire, SHT40_I2C_ADDR_44);
-
-  /*****************MAX17048******************************************/
-
-  lipo.enableDebugging();  // Uncomment this line to enable helpful debug messages on Serial
-
-  // Set up the MAX17043 LiPo fuel gauge:
-  if (lipo.begin() == false)  // Connect to the MAX17043 using the default wire port
-  {
-    Serial.println(F("MAX17048 not detected. Please check wiring. Freezing."));
-    while (1)
-      ;
-  }
-  // Quick start restarts the MAX17043 in hopes of getting a more accurate
-  // guess for the SOC.
-  lipo.quickStart();
-
-  // We can set an interrupt to alert when the battery SoC gets too low.
-  // We can alert at anywhere between 1% - 32%:
-  lipo.setThreshold(20);  // Set alert threshold to 20%.
-  
-  deviceState = DEVICE_STATE_INIT;
-}
-
 }
 
 
 void loop() {
 
 
- 
-    switch (deviceState) {
-      case DEVICE_STATE_INIT:
-        {
-#if (LORAWAN_DEVEUI_AUTO)
-          LoRaWAN.generateDeveuiByChipID();
-#endif
-          LoRaWAN.init(loraWanClass, loraWanRegion);
-          break;
-        }
-      case DEVICE_STATE_JOIN:
-        {
-          LoRaWAN.join();
-          break;
-        }
-      case DEVICE_STATE_SEND:
-        {
-           hx711ABCD();
-          prepareTxFrame1(appPort);
-          prepareTxFrame2(appPort);
-          LoRaWAN.send();
 
-          deviceState = DEVICE_STATE_CYCLE;
-          break;
-        }
-      case DEVICE_STATE_CYCLE:
-        {
-          // Schedule next packet transmission
-          txDutyCycleTime = appTxDutyCycle + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
-          LoRaWAN.cycle(txDutyCycleTime);
-          deviceState = DEVICE_STATE_SLEEP;
-          break;
-        }
-      case DEVICE_STATE_SLEEP:
-        {         
-          LoRaWAN.sleep(loraWanClass);
-          break;
-        }
-      default:
-        {
-          deviceState = DEVICE_STATE_INIT;
-          break;
-        }
-    }
+  switch (deviceState) {
+    case DEVICE_STATE_INIT:
+      {
+#if (LORAWAN_DEVEUI_AUTO)
+        LoRaWAN.generateDeveuiByChipID();
+#endif
+        LoRaWAN.init(loraWanClass, loraWanRegion);
+        break;
+      }
+    case DEVICE_STATE_JOIN:
+      {
+        LoRaWAN.join();
+        break;
+      }
+    case DEVICE_STATE_SEND:
+      {
+        hx711ABCD();
+       Serial.print("Device state: SEND - Frame index: ");
+      Serial.println(currentFrameIndex);
+      prepareTxFrameFuncs[currentFrameIndex](appPort);
+      LoRaWAN.send();
+      currentFrameIndex = (currentFrameIndex + 1) % totalFrames; // Move to next frame
+      deviceState = DEVICE_STATE_CYCLE;
+      break;
+      }
+    case DEVICE_STATE_CYCLE:
+      {
+        Serial.println("Device state: CYCLE");
+      // Schedule next packet transmission
+      txDutyCycleTime = appTxDutyCycle + randr(-APP_TX_DUTYCYCLE_RND, APP_TX_DUTYCYCLE_RND);
+      Serial.print("Scheduled sleep time (ms): ");
+      Serial.println(txDutyCycleTime);
+      LoRaWAN.cycle(txDutyCycleTime);
+      deviceState = DEVICE_STATE_SLEEP;
+      break;
+      }
+    case DEVICE_STATE_SLEEP:
+      {
+        LoRaWAN.sleep(loraWanClass);
+        break;
+      }
+    default:
+      {
+        deviceState = DEVICE_STATE_INIT;
+        break;
+      }
   }
+}
 
 
 /*****************************Calcul de la pression barométrique ramené au niveau de la mer****************************/
 
 void baropressure() {
 
- delay(1000);
+  delay(1000);
 
   start = micros();
-  int result = MS5611.read();   // uses default OSR_ULTRA_LOW  (fastest)
+  int result = MS5611.read();  // uses default OSR_ULTRA_LOW  (fastest)
   stop = micros();
 
-  if (count % 20 == 0)
-  {
+  if (count % 20 == 0) {
     Serial.println();
     Serial.println("CNT\tDUR\tRES\tTEMP\tPRES");
   }
@@ -1059,8 +1067,8 @@ void battery() {
 void sht() {
 
 
- // i2cMux.setChannel(CHAN4);
-  
+  // i2cMux.setChannel(CHAN4);
+
   //error4 = sht4x.measureHighPrecision(temperature4, humidity4);
 
   i2cMux.setChannel(CHAN0);
@@ -1068,10 +1076,3 @@ void sht() {
   float humidity0;
   error0 = sht4x.measureHighPrecision(temperature0, humidity0);
 }
-
-
-
-
-
-
-

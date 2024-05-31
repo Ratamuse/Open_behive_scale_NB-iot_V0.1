@@ -74,8 +74,8 @@ int data_channel = 0;
 
 HX711 scale1;
 HX711 scale2;
-uint8_t dataPin1 = 48;
-uint8_t clockPin1 = 47;
+uint8_t dataPin1 = 10;
+uint8_t clockPin1 = 9;
 uint8_t dataPin2 = 14;
 uint8_t clockPin2 = 13;
 //float factor1;
