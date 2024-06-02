@@ -1,8 +1,8 @@
 //####################### Ratamuse #######################/
 //################## ratamuse.pf@googlemail.com ##################/
-//######################### MAY 2023 ######################/
+//######################### MAY 2024 ######################/
 //#################### SHELL V3 HELTEC  ####################/
-//######################## Version 1.0.0 #######################/
+//######################## Version 1.0.1 #######################/
 
 /*
   LoRaWan Rain Gauge
@@ -27,7 +27,7 @@ bool ENABLE_SERIAL = true;  // Enable serial debug output here if required
 #define SD_MOSI 40
 #define SD_CS 42
 // The interrupt pin is attached to GPIO1
-#define RAIN_GAUGE_PIN 17
+#define wifi_int 17
 
 
 
@@ -123,7 +123,7 @@ SPIClass *hspi = NULL;
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
 #include "Preferences.h"
-
+#include "AsyncTCP.h"
 // Définir le préfixe du SSID et le nom du dispositif
 const char *ssidPrefix = "balance";
 const char *deviceName = "G8";  // ou "G3" selon le microcontrôleur
@@ -767,12 +767,12 @@ void setup1() {
 
 void setup() {
 
-  pinMode(gpioPin, INPUT_PULLUP);
+  pinMode(wifi_int, INPUT_PULLUP);
 
   // Lecture de l'état de la broche GPIO 2
 
 
-  if (digitalRead(gpioPin) == LOW) {
+  if (digitalRead(wifi_int) == LOW) {
     setup1();
   } else {
 
@@ -792,7 +792,7 @@ void setup() {
     digitalWrite(POWER_PIN, POWER_PIN_STATE);
 
     delay(50);
-    Mcu.begin();
+    Mcu.begin(HELTEC_BOARD,SLOW_CLK_TPYE);
 
     Wire.begin(SDA_PIN, SCL_PIN);
 
